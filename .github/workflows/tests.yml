@@ -1,0 +1,33 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    env:
+      # Dogwood tests fail instead of skipping when dogwood-py is missing.
+      PROOFLAB_REQUIRE_DOGWOOD: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Wheel only: if the Linux wheel can't be installed, fail here rather than build from source.
+          pip install --only-binary dogwood-py -r requirements.txt
+          pip install pytest==9.2.0
+          pip install "governanceops-agent @ git+https://github.com/CrillyPienaah/governanceops-agent.git@2de5883f3269847e913f8de04cf8ef1ae3462807"
+
+      - name: Check Dogwood native extension
+        run: python -c "from dogwood import native; native.require_available(); print('dogwood native OK')"
+
+      - name: Run tests
+        # Collection errors fail the run but don't stop the other files from running.
+        run: pytest -v -rs --continue-on-collection-errors

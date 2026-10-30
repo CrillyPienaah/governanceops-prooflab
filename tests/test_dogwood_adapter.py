@@ -1,16 +1,22 @@
 """The three v1 experiments against a Dogwood-policied agent, plus the adapter's own guarantees.
-Skipped cleanly when dogwood-py (or its native extension) isn't installed.
+Skipped cleanly when dogwood-py (or its native extension) isn't installed, unless
+PROOFLAB_REQUIRE_DOGWOOD=1 (set in CI): then a missing install fails instead.
 """
+import os
 from dataclasses import replace
 from decimal import Decimal
 
 import pytest
 
-pytest.importorskip("dogwood")
-from dogwood import native  # noqa: E402
+if os.environ.get("PROOFLAB_REQUIRE_DOGWOOD") == "1":
+    from dogwood import native
+    native.require_available()
+else:
+    pytest.importorskip("dogwood")
+    from dogwood import native  # noqa: E402
 
-if not native.available():
-    pytest.skip("dogwood-py native extension unavailable", allow_module_level=True)
+    if not native.available():
+        pytest.skip("dogwood-py native extension unavailable", allow_module_level=True)
 
 from fixtures.dogwood_adapter import (APPROVE, DogwoodAdapter, DogwoodRuntime, DogwoodStartupError,  # noqa: E402
                                       HarnessApprover, MockPaymentRail, to_cents)
