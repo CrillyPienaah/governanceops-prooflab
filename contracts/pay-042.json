@@ -1,0 +1,24 @@
+{
+  "contract_id": "GC-PAY-042-v3",
+  "agent_id": "PAY-042",
+  "inventory_record_id": "INV-0042",
+  "risk_rating": "high",
+  "autonomy_level": "L2",
+  "policy_version": "3.0.0",
+  "tools": [
+    {"name": "issue_refund", "max_per_call": "500"},
+    {"name": "credit_adjustment", "max_per_call": "500"}
+  ],
+  "cumulative_limits": [
+    {"limit_id": "CUM-CAD-500", "tools": ["issue_refund", "credit_adjustment"],
+     "currency": "CAD", "ceiling": "500", "window": "PT24H"}
+  ],
+  "approval_rules": [
+    {"rule_id": "HITL-200", "tools": ["issue_refund", "credit_adjustment"], "threshold": "200",
+     "single_use": true, "bound_fields": ["action_id", "amount", "payee"]}
+  ],
+  "allowed_payees": ["CUST-1001", "CUST-1002"],
+  "valid_from": "2026-11-01T00:00:00+00:00",
+  "valid_until": "2027-05-01T00:00:00+00:00",
+  "status": "active"
+}
