@@ -1,0 +1,123 @@
+// PAY-042 runtime policy for ProofLab's Dogwood adapter, written by hand from
+// contracts/pay-042.json. Every construct here is one docs/dogwood-findings.md
+// verified on dogwood-py 0.0.12.
+//
+// Amounts are integer cents: CAD 500 = 50000, CAD 200 = 20000.
+// Both granted tools are one action, Payout, told apart by input.tool, so one
+// sum covers the cumulative limit across them.
+// Windows: cumulative limit and approvals 1d (the contract's PT24H); authority
+// 200d, which covers valid_from..valid_until (181 days) and needs the raised
+// max_window in payments.dwschema.
+// Revocation is the absence of a RevokeAuthority since the startup GrantAuthority.
+
+@id("grant_recorded")
+permit (
+    principal,
+    action == Payments::Action::"GrantAuthority",
+    resource
+);
+
+@id("revoke_recorded")
+permit (
+    principal,
+    action == Payments::Action::"RevokeAuthority",
+    resource
+);
+
+@id("approval_recorded")
+permit (
+    principal,
+    action == Payments::Action::"ApprovePayout",
+    resource
+);
+
+@id("payout_at_or_below_approval_threshold")
+permit (
+    principal,
+    action == Payments::Action::"Payout",
+    resource
+)
+when {
+    ["issue_refund", "credit_adjustment"].contains(context.input.tool) &&
+    ["CUST-1001", "CUST-1002"].contains(context.input.payee) &&
+    context.input.amount <= 20000
+}
+when temporal {
+    exists (total: Long). (
+        (sum_within(
+            amount,
+            1d,
+            Payments::Action::"Payout"::request{
+                input.amount: amount
+            }
+        )) == total
+        && total <= 50000
+    )
+}
+when temporal {
+    !Payments::Action::"RevokeAuthority"::request{
+        input.contract_id: context.input.contract_id
+    }
+    since within 200d
+    Payments::Action::"GrantAuthority"::request{
+        input.contract_id: context.input.contract_id
+    }
+};
+
+@id("payout_above_approval_threshold")
+permit (
+    principal,
+    action == Payments::Action::"Payout",
+    resource
+)
+when {
+    ["issue_refund", "credit_adjustment"].contains(context.input.tool) &&
+    ["CUST-1001", "CUST-1002"].contains(context.input.payee) &&
+    context.input.amount > 20000 &&
+    context.input.amount <= 50000
+}
+when temporal {
+    exists (total: Long). (
+        (sum_within(
+            amount,
+            1d,
+            Payments::Action::"Payout"::request{
+                input.amount: amount
+            }
+        )) == total
+        && total <= 50000
+    )
+}
+when temporal {
+    formerly within 1d (
+        Payments::Action::"ApprovePayout"::request{
+            input.action_id: context.input.action_id,
+            input.amount: context.input.amount,
+            input.payee: context.input.payee,
+            input.approval_id: context.input.approval_id,
+            input.status: "approved"
+        }
+    )
+}
+when temporal {
+    exists (n: Long). (
+        (count for (t: Timepoint). where (
+            formerly within 1d (
+                Payments::Action::"Payout"::request{
+                    input.approval_id: context.input.approval_id
+                }
+                && tp(t)
+            )
+        )) == n
+        && n == 1
+    )
+}
+when temporal {
+    !Payments::Action::"RevokeAuthority"::request{
+        input.contract_id: context.input.contract_id
+    }
+    since within 200d
+    Payments::Action::"GrantAuthority"::request{
+        input.contract_id: context.input.contract_id
+    }
+};

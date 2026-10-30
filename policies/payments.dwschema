@@ -1,0 +1,28 @@
+// Dogwood's default event schema plus max_window = 200d, so the authority
+// window in pay-042.dw can cover the contract's validity period.
+max_window = 200d
+
+decision event <A>::request {
+    ...inputs(A),
+    pin callerPrincipal: principalType(A) = principal,
+    callerResource: resourceType(A),
+    requestId: String,
+    sessionId: String,
+}
+
+event <A>::response {
+    ...inputs(A),
+    ...outputs(A),
+    pin callerPrincipal: principalType(A) = principal,
+    callerResource: resourceType(A),
+    requestId: String,
+    sessionId: String,
+}
+
+event <A>::error {
+    ...inputs(A),
+    pin callerPrincipal: principalType(A) = principal,
+    callerResource: resourceType(A),
+    requestId: String,
+    sessionId: String,
+}

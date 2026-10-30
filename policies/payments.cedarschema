@@ -1,0 +1,44 @@
+namespace Payments {
+  type PayoutInput = {
+    tool: String,
+    action_id: String,
+    amount: Long,
+    payee: String,
+    approval_id: String,
+    contract_id: String,
+    status: String
+  };
+
+  entity Rail;
+  entity Agent;
+
+  action "PaymentTool" appliesTo {
+    principal: [Agent],
+    resource: [Rail],
+    context: { input: PayoutInput }
+  };
+
+  action "Payout" in [Action::"PaymentTool"] appliesTo {
+    principal: [Agent],
+    resource: [Rail],
+    context: { input: PayoutInput }
+  };
+
+  action "ApprovePayout" in [Action::"PaymentTool"] appliesTo {
+    principal: [Agent],
+    resource: [Rail],
+    context: { input: PayoutInput }
+  };
+
+  action "GrantAuthority" in [Action::"PaymentTool"] appliesTo {
+    principal: [Agent],
+    resource: [Rail],
+    context: { input: PayoutInput }
+  };
+
+  action "RevokeAuthority" in [Action::"PaymentTool"] appliesTo {
+    principal: [Agent],
+    resource: [Rail],
+    context: { input: PayoutInput }
+  };
+}

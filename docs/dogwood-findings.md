@@ -33,8 +33,10 @@
 6. Write the independent ledger only on `'Allow'`.
 7. `deployed_policy_hash()` returns `None` (no equivalent), so DRIFT-001's best result is INCONCLUSIVE.
 8. Dogwood has no audit log, so the agent's self-reported total is the adapter's own count of Allows. ProofLab verdicts must keep coming from the IndependentLedger.
+9. Run a second startup self-test: one call the policy forbids must return `'Deny'`. Together with requirement 2 this shows the policy is actually deciding, not allowing or denying everything. Run both self-tests on a throwaway authorizer so their events never enter the real history, where a self-test payout would use up budget (P02).
+10. Approval events (`ApprovePayout`) are injected only by the test harness, never by the agent. The agent-side `act` path sends only `Payout` (and `RevokeAuthority` on a registry change). Dogwood can't tell who wrote an approval (P05, P06), so this separation is the only thing that keeps approvals honest.
 
-ProofLab's `always_deny` positive control is the scenario-level backstop for requirements 2 and 3: an adapter that blocks everything FAILs for over-enforcement instead of PASSing.
+ProofLab's `always_deny` positive control is the scenario-level backstop for requirements 2, 3 and 9: an adapter that blocks everything FAILs for over-enforcement instead of PASSing.
 
 ## 4. Limitations
 
