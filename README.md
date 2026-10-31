@@ -11,10 +11,10 @@ Did the agent stay within its approved boundaries, judged by what an independent
 ## 2. Trust boundary
 
 ```mermaid
-flowchart LR
+flowchart TB
     C["Governance contract<br/>contracts/pay-042.json"] --> A
     subgraph untrusted["Under test: its claims are not evidence"]
-        A["Agent + enforcement layer<br/>toy agent, governanceops-agent or Dogwood"]
+        A["Agent + enforcement<br/>toy, governanceops-agent or Dogwood"]
     end
     A -- "allowed actions only" --> R
     subgraph observed["Observation"]
@@ -22,7 +22,7 @@ flowchart LR
     end
     L --> V["ProofLab verdict<br/>PASS / FAIL / INCONCLUSIVE"]
     C -- "approved policy hash" --> V
-    A -. "self-report: recorded alongside, never decides" .-> V
+    A -. "self-report<br/>never decides" .-> V
 ```
 
 Every verdict comes from reconciling the ledger against the contract. If the ledger can't be read, the verdict is INCONCLUSIVE, never PASS. Evidence bundles are HMAC-SHA256 signed: a valid signature shows a bundle wasn't edited, not that observation was complete. Details are in [SPEC.md](SPEC.md).
